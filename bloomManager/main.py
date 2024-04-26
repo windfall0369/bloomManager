@@ -14,8 +14,3 @@ df = ticker.history(interval='1d', period='1y', auto_adjust=False)
 
 print(df.tail())
 print(df.info())
-
-plt.show()
-
-
-
