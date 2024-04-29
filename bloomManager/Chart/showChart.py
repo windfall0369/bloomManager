@@ -2,6 +2,7 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
 
 # 1d 차트
@@ -10,46 +11,38 @@ def day_chart(ticker, start, end):
 
     df = ticker.history(interval=interval, auto_adjust=True,
                         start=start, end=end)
+    fig = go.Figure()
+    fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']))
+    fig.update_traces(increasing_line_color='red', decreasing_line_color='blue')
+    dailyChartImg = fig.to_image(format='png')
 
-    days = df.index.strftime('%m-%d')
-    plt.figure(figsize=(10, 6))
-    plt.plot(days, df['Open'], marker='.', color='red')
-    plt.title(f'Open Price of {ticker} at 1 day between {start} and {end}')
-    plt.xlabel('Date')
-    plt.ylabel('Open Price')
-    plt.grid(True)
-    plt.show()
+    return dailyChartImg
 
 
 # 1m 차트
-def week_chart(ticker,start, end):
+def week_chart(ticker, start, end):
+    interval = '5d'
+
+    df = ticker.history(interval=interval, auto_adjust=True,
+                        start=start, end=end)
+    fig = go.Figure()
+    fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']))
+    fig.update_traces(increasing_line_color='red', decreasing_line_color='blue')
+    weekChartImg = fig.to_image(format='png')
+
+    return weekChartImg
+
+
+# 1y 차트
+def month_chart(ticker, start, end):
     interval = '1mo'
 
     df = ticker.history(interval=interval, auto_adjust=True,
                         start=start, end=end)
 
-    days = df.index.strftime('%Y-%m')
-    plt.figure(figsize=(10, 6))
-    plt.plot(days, df['Open'], marker='.', color='red')
-    plt.title(f'Open Price of {ticker} at 1 week between {start} and {end}')
-    plt.xlabel('Date')
-    plt.ylabel('Open Price')
-    plt.grid(True)
-    plt.show()
+    fig = go.Figure()
+    fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close']))
+    fig.update_traces(increasing_line_color='red', decreasing_line_color='blue')
+    monthChartImg = fig.to_image(format='png')
 
-
-# 1y 차트
-def year_chart(ticker, start, end):
-    interval = '3mo'
-
-    df = ticker.history(interval=interval, auto_adjust=True,
-                        start=start, end=end)
-
-    days = df.index.strftime('%Y-%m')
-    plt.figure(figsize=(10, 6))
-    plt.plot(days, df['Open'], marker='.', color='red')
-    plt.title(f'Open Price of {ticker} at 1 year  between {start} and {end}')
-    plt.xlabel('Date')
-    plt.ylabel('Open Price')
-    plt.grid(True)
-    plt.show()
+    return monthChartImg
