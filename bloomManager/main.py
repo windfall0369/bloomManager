@@ -1,25 +1,21 @@
-import sys
 import yfinance as yf
 import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-from bs4 import BeautifulSoup
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-import plotly.express as px
-import kaleido
-from typing import Union
-from fastapi import FastAPI
-from fastapi.responses import *
-from pydantic import BaseModel
 import json
-import io
-
-from Chart import showChart
-from FinancialsInfo import financial_info
-from FutureOptions import calls_puts
+from fastapi import FastAPI
+from fastapi import Request
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+from api import chart
+from api import financial_info
+from api import options
 
 app = FastAPI()
+
+app.include_router(chart.router)
+app.include_router(financial_info.router)
+app.include_router(options.router)
+
+templates = Jinja2Templates(directory="templates")
 
 
 class Ticker(BaseModel):
@@ -28,8 +24,8 @@ class Ticker(BaseModel):
 
 
 @app.get("/")
-async def read_root():
-    return 'This is root path from MyAPI'
+async def home(request: Request):
+    return templates.TemplateResponse('index.html', {"request": request})
 
 
 @app.get("/price/{name}")
@@ -48,25 +44,6 @@ def get_price(name: str):
     return df.to_json(orient='records')
 
 
-@app.get("/chart/day/{name}")
-def get_chart(name: str):
-    ticker = yf.Ticker(name)
-    img = showChart.day_chart(ticker, '2024-01-01', '2024-12-31')
-
-    return Response(content=img, media_type='image/png')
 
 
-@app.get("/chart/week/{name}")
-def get_chart(name: str):
-    ticker = yf.Ticker(name)
-    img = showChart.week_chart(ticker, '2024-01-01', '2024-12-31')
 
-    return Response(content=img, media_type='image/png')
-
-
-@app.get("/chart/month/{name}")
-def get_chart(name: str):
-    ticker = yf.Ticker(name)
-    img = showChart.month_chart(ticker, '2024-01-01', '2024-12-31')
-
-    return Response(content=img, media_type='image/png')
