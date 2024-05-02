@@ -12,25 +12,10 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 
-def balance(ticker):
-    balance_sheet = ticker.balance_sheet
-    return balance_sheet
-
-
-def cashflow(ticker):
-    cashflow_sheet = ticker.cashflow
-    return cashflow_sheet
-
-
-def income_statement(ticker):
-    income_stmt = ticker.quarterly_income_stmt
-    return income_stmt
-
-
-@router.get('/{name}/cash')
+@router.get('/cash/{name}')
 def get_cashflow(name: str, request: Request):
     ticker = yf.Ticker(name)
-    df = cashflow(ticker)
+    df = ticker.cashflow
 
     html_text = df.to_html(justify='center')
     html = open("./templates/cashflow.html", 'w')
@@ -40,10 +25,10 @@ def get_cashflow(name: str, request: Request):
     return templates.TemplateResponse('cashflow.html', {"request": request})
 
 
-@router.get('/{name}/balance')
+@router.get('/balance/{name}')
 def get_balance(name: str, request: Request):
     ticker = yf.Ticker(name)
-    df = balance(ticker)
+    df = ticker.balance_sheet
 
     html_text = df.to_html(justify='center')
     html = open("./templates/balance.html", 'w')
@@ -53,10 +38,10 @@ def get_balance(name: str, request: Request):
     return templates.TemplateResponse('balance.html', {"request": request})
 
 
-@router.get('/{name}/income')
+@router.get('/income/{name}')
 def get_income(name: str, request: Request):
     ticker = yf.Ticker(name)
-    df = income_statement(ticker)
+    df = ticker.quarterly_income_stmt
 
     html_text = df.to_html(justify='center')
     html = open("./templates/income.html", 'w')
@@ -66,7 +51,7 @@ def get_income(name: str, request: Request):
     return templates.TemplateResponse('income.html', {"request": request})
 
 
-@router.get('/{name}/news')
+@router.get('/news/{name}')
 def get_news(name: str, request: Request):
     ticker = yf.Ticker(name)
     new_list = ticker.news

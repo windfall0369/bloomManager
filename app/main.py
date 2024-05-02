@@ -8,12 +8,14 @@ from pydantic import BaseModel
 from api import chart
 from api import financial_info
 from api import options
+from api import report
 
 app = FastAPI()
 
 app.include_router(chart.router)
 app.include_router(financial_info.router)
 app.include_router(options.router)
+app.include_router(report.router)
 
 templates = Jinja2Templates(directory="templates")
 
