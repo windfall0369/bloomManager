@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import yfinance as yf
 import pandas as pd
 import json
@@ -45,7 +47,8 @@ def get_price(name: str):
 
     return df.to_json(orient='records')
 
-
-
-
-
+#
+# ticker = yf.Ticker('AAPL')
+# dt = datetime.strptime('20230101', '%Y%m%d')
+# dt_date = dt.date()
+# print(dt_date)
