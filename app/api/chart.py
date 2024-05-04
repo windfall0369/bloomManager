@@ -8,7 +8,6 @@ from fastapi import APIRouter
 import mplfinance as mpf
 import matplotlib
 
-matplotlib.use('Agg')
 from matplotlib.pyplot import show
 import matplotlib.pyplot as plt
 import io
@@ -16,7 +15,10 @@ import io
 from PIL import Image
 from pathlib import Path
 
+
+#차트 출력x, 백엔드 'Agg' 사용
 show(block=False)
+matplotlib.use('Agg')
 
 router = APIRouter(
     prefix="/chart",
@@ -56,6 +58,7 @@ def draw_mpf(ticker, start, end, interval):
     return chart_bytes
 
 
+# mpf 활용 차트 이미지 생성
 def draw_chart2(ticker,
                 start: str = [None, '2024-01-01'],
                 end: str = None,
@@ -76,6 +79,7 @@ def draw_chart2(ticker,
                            mav=(5, 30, 100),
                            returnfig=True)
 
+    # 이미지로 저장
     img_buffer = io.BytesIO()
     fig.savefig(img_buffer, format='png')
     img_buffer.seek(0)

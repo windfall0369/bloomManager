@@ -11,16 +11,18 @@ from api import chart
 from api import financial_info
 from api import options
 from api import report
+from api import index
 
 app = FastAPI()
+
 
 app.include_router(chart.router)
 app.include_router(financial_info.router)
 app.include_router(options.router)
 app.include_router(report.router)
+app.include_router(index.router)
 
 templates = Jinja2Templates(directory="templates")
-
 
 class Ticker(BaseModel):
     ticker: str
@@ -47,8 +49,3 @@ def get_price(name: str):
 
     return df.to_json(orient='records')
 
-#
-# ticker = yf.Ticker('AAPL')
-# dt = datetime.strptime('20230101', '%Y%m%d')
-# dt_date = dt.date()
-# print(dt_date)
