@@ -15,8 +15,7 @@ import io
 from PIL import Image
 from pathlib import Path
 
-
-#차트 출력x, 백엔드 'Agg' 사용
+# 차트 출력x, 백엔드 'Agg' 사용
 show(block=False)
 matplotlib.use('Agg')
 
@@ -34,6 +33,7 @@ templates = Jinja2Templates(directory="templates")
 # 1일 뒤
 # end_date = datetime.strptime(date, '%Y-%m-%d') + timedelta(days=1)
 
+# plotly 활용
 def draw_chart(ticker, start, end, interval):
     df = ticker.history(interval=interval, auto_adjust=True,
                         start=start, end=end)
@@ -45,17 +45,57 @@ def draw_chart(ticker, start, end, interval):
     return chart
 
 
-def draw_mpf(ticker, start, end, interval):
-    df = ticker.history(interval=interval, auto_adjust=True,
-                        start=start, end=end)
+# mpf 활용
+def draw_mpf(ticker, start, end, interval, style):
+    df = ticker.history(start=start,
+                        end=end,
+                        interval=interval,
+                        auto_adjust=True,
+                        )
+    # 커스텀 마켓 컬러 설정
+    chart_style = {
+        "base_mpl_style": "dark_background",
+        "marketcolors": {
+            "candle": {"up": "#3dc985", "down": "#ef4f60"},
+            "edge": {"up": "#3dc985", "down": "#ef4f60"},
+            "wick": {"up": "#3dc985", "down": "#ef4f60"},
+            "ohlc": {"up": "green", "down": "red"},
+            "volume": {"up": "#247252", "down": "#82333f"},
+            "vcedge": {"up": "green", "down": "red"},
+            "vcdopcod": False,
+            "alpha": 1,
+        },
+        "mavcolors": ("#ad7739", "#a63ab2", "#62b8ba"),
+        "facecolor": "#1b1f24",
+        "gridcolor": "#2c2e31",
+        "gridstyle": "--",
+        "y_on_right": True,
+        "rc": {
+            "axes.grid": True,
+            "axes.grid.axis": "y",
+            "axes.edgecolor": "#474d56",
+            "axes.titlecolor": "red",
+            "figure.facecolor": "#161a1e",
+            "figure.titlesize": "x-large",
+            "figure.titleweight": "semibold",
+        },
+        "base_mpf_style": "binance-dark",
+    }
 
-    fig, axlist = mpf.plot(df, type='line', volume=True, returnfig=True)
+    fig, axlist = mpf.plot(df,
+                           type=style,
+                           volume=True, returnfig=True,
+                           style= chart_style,
+                           title=ticker.info['shortName'] + ' price \n between ' + str(start) + ' to ' + str(
+                               end) + ' by ' + interval,
+                           ylabel='Price ($)',
+                           ylabel_lower=' Volume')
     img_buffer = io.BytesIO()
     fig.savefig(img_buffer, format='png')
     img_buffer.seek(0)
-    chart_bytes = img_buffer.read()
+    chart = img_buffer.read()
 
-    return chart_bytes
+    return chart
 
 
 # mpf 활용 차트 이미지 생성
@@ -89,11 +129,14 @@ def draw_chart2(ticker,
 
 
 @router.get("/mpf/{name}")
-def mpf_chart(name: str):
+def mpf_chart(name: str,
+              start: str = '2024-01-01',
+              end: str = '2024-12-31',
+              interval: str = '1d',
+              style: str = 'line'):
     ticker = yf.Ticker(name)
-    # df = ticker.history(ticker, interval='1d', auto_adjust=True, start='2023-01-01')
 
-    img = draw_mpf(ticker, start='2023-01-01', end='2024-01-01', interval='1d')
+    img = draw_mpf(ticker, start=start, end=end, interval=interval, style=style)
     return Response(content=img, media_type='image/png')
 
 
@@ -131,3 +174,6 @@ def get_month_chart(name: str, start: str = '2024-01-01', end: str = '2024-12-31
     monthChartImg = draw_chart(ticker, start, end, '1mo')
 
     return Response(content=monthChartImg, media_type='image/png')
+
+
+print(mpf.available_styles())

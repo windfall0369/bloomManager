@@ -38,6 +38,6 @@ options.add_experimental_option('detach', True)
 # driver = webdriver.Chrome(options=options)
 
 # url = 'https://naver.com'
-fred = Fred(api_key='10eaeb34719b8137e832acfc3d79d714')
-data = fred.get_series('SP500', '2023-01-01', '2024-01-01')
-print(data)
+# fred = Fred(api_key='10eaeb34719b8137e832acfc3d79d714')
+# data = fred.get_series('SP500', '2023-01-01', '2024-01-01')
+# print(data)

@@ -66,7 +66,7 @@ def get_SP500_Daily(start: str = None, end: str = None):
         yaxis_title="SP500",
         legend_title="Legend Title",
         margin=dict(l=20, r=20, t=40, b=20),
-        font=dict(family="Courier New, monospace", size=18, color="RebeccaPurple"),
+        font=dict(family="Courx`ier New, monospace", size=18, color="RebeccaPurple"),
         paper_bgcolor="white",
     )
 

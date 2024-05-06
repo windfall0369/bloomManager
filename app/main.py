@@ -48,4 +48,3 @@ def get_price(name: str):
     print(data)
 
     return df.to_json(orient='records')
-
