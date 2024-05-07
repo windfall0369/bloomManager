@@ -46,7 +46,8 @@ def get_SP500():
 
 
 @router.get('/SP500/Daily')
-def get_SP500_Daily(start: str = None, end: str = None):
+def get_SP500_Daily(start: str = None,
+                    end: str = None):
     fred = Fred(api_key)
 
     if end is None:
