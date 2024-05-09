@@ -54,4 +54,11 @@ def get_income(name: str, request: Request):
 @router.get('/news/{name}')
 def get_news(name: str, request: Request):
     ticker = yf.Ticker(name)
-    new_list = ticker.news
+    news_list = ticker.news
+
+    return news_list
+
+@router.get("/reco/{name}")
+def get_reco(name: str, request: Request):
+    ticker = yf.Ticker(name)
+

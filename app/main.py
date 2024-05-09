@@ -15,7 +15,6 @@ from api import index
 
 app = FastAPI()
 
-
 app.include_router(chart.router)
 app.include_router(financial_info.router)
 app.include_router(options.router)
@@ -23,6 +22,7 @@ app.include_router(report.router)
 app.include_router(index.router)
 
 templates = Jinja2Templates(directory="templates")
+
 
 class Ticker(BaseModel):
     ticker: str
