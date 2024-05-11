@@ -7,11 +7,14 @@ from fastapi import FastAPI
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+from starlette.responses import HTMLResponse
+
 from api import chart
 from api import financial_info
 from api import options
 from api import report
 from api import index
+from api import raw_material
 
 app = FastAPI()
 
@@ -20,6 +23,7 @@ app.include_router(financial_info.router)
 app.include_router(options.router)
 app.include_router(report.router)
 app.include_router(index.router)
+app.include_router(raw_material.router)
 
 templates = Jinja2Templates(directory="templates")
 
@@ -35,16 +39,16 @@ async def home(request: Request):
 
 
 @app.get("/price/{name}")
-def get_price(name: str):
+def get_price(request: Request, name: str,
+              start: str = '2024-01-01',
+              period: str = '1y',
+              interval: str = '1d'):
     print(f"name = {name}")
     ticker = yf.Ticker(name)
-    df = ticker.history(interval='1d', auto_adjust=True,
-                        period='1y', start='2024-01-01')
-    price = df.to_json(orient='records')
-    print(type(price))
-    print(price)
-    data = json.loads(price)
-    data = pd.json_normalize(data)
-    print(data)
+    df = ticker.history(interval=interval, auto_adjust=True,
+                        period=period, start=start)
 
-    return df.to_json(orient='records')
+    html_table = df.to_html()
+    return HTMLResponse(content=html_table)
+
+

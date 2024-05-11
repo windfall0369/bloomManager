@@ -15,7 +15,6 @@ router = APIRouter(
     prefix="/report",
     tags=["report"]
 )
-app = FastAPI()
 
 templates = Jinja2Templates(directory="templates")
 
@@ -31,13 +30,3 @@ def get_recommendations(request: Request, name: str):
     return templates.TemplateResponse('reco.html', {"request": request})
 
 
-options = Options()
-options.add_argument("--start-maximized")
-options.add_experimental_option('detach', True)
-
-# driver = webdriver.Chrome(options=options)
-
-# url = 'https://naver.com'
-# fred = Fred(api_key='10eaeb34719b8137e832acfc3d79d714')
-# data = fred.get_series('SP500', '2023-01-01', '2024-01-01')
-# print(data)

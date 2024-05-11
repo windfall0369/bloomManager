@@ -8,7 +8,6 @@ router = APIRouter(
     tags=["financial_info"]
 )
 
-app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 
@@ -57,8 +56,4 @@ def get_news(name: str, request: Request):
     news_list = ticker.news
 
     return news_list
-
-@router.get("/reco/{name}")
-def get_reco(name: str, request: Request):
-    ticker = yf.Ticker(name)
 

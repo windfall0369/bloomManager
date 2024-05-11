@@ -1,31 +1,21 @@
-import math
-from datetime import datetime
-
-import numpy as np
-import yfinance as yf
-from bs4 import BeautifulSoup
-from selenium.webdriver.support.wait import WebDriverWait
-from sqlalchemy import create_engine
 import pandas as pd
 import pymysql
-import time
+import yfinance as yf
+from sqlalchemy import create_engine
 from tqdm import tqdm
-from selenium import webdriver
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
+import time
 
-# DB 연결
-
+# # DB 연결
 engine = create_engine('mysql+pymysql://root:12345678@127.0.0.1:3306/stock_db')
 con = pymysql.connect(user='root',
                       passwd='12345678',
                       host='127.0.0.1',
                       db='stock_db',
                       charset='utf8')
+
 mycursor = con.cursor()
 
-# ticker list 불러오기
+# 티커리스트 불러오기
 ticker_list = pd.read_sql("""
 select * from global_ticker
 where date = (select max(date) from global_ticker)
@@ -34,37 +24,41 @@ and country = 'United States';
 
 # DB 저장 쿼리
 query = """
-    insert into global_price (Date, Open, High, Low, Close, `Adj Close`, Volume, ticker)
-    values (%s, %s, %s, %s, %s, %s, %s, %s)
-    on duplicate key update 
-    Open = values(Open), High = values(High), Low = values(Low),
-    Close = values(Close), `Adj Close` = values(`Adj Close`),
-    Volume = values(Volume);
+    insert into global_price (Date, High, Low, Open, Close, Volume, `Adj Close`, ticker)
+    values (%s, %s,%s,%s,%s,%s,%s,%s) as new
+    on duplicate key update
+    High = new.High, Low = new.Low, Open = new.Open, Close = new.Close,
+    Volume = new.Volume, `Adj Close` = new.`Adj Close`;
 """
 
 error_list = []
 
+# 전종목 주가 다운로드 및 저장
 for i in tqdm(range(0, len(ticker_list))):
-
     ticker = ticker_list['Symbol'][i]
-
     try:
-        price = yf.download(ticker, progress=False)
 
-        price = price.reset_index()
-        price['ticker'] = ticker
+        # 주가 다운로드
+        data = yf.download(ticker, progress=False)
 
-        args = price.values.tolist()
+        # 데이터 클렌징
+        data['ticker'] = ticker
 
-        mycursor.executemany(query, args)
-        con.commit()
+        data.to_sql('global_price', con=engine, if_exists='append', index = True,
+                    index_label='Date')
 
+    except:
 
-    except Exception as e:
-        print(f"Error for ticker {ticker}: {e}")
-        error_list.append(ticker_list)
+        # 오류 발생시 error_list에 티커 저장하고 넘어가기
+        print(ticker)
+        error_list.append(ticker)
 
+    # 타임슬립 적용
     time.sleep(2)
 
+# 연결 종료
 engine.dispose()
 con.close()
+
+
+print(error_list)

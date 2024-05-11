@@ -22,7 +22,6 @@ router = APIRouter(
     prefix="/index",
     tags=["index"]
 )
-app = FastAPI()
 
 templates = Jinja2Templates(directory="templates")
 
@@ -93,9 +92,9 @@ def get_NASDAQCOM():
     return get_fred_daily('NASDAQCOM')
 
 
-@router.get("/DJI/Today")
-def get_DJI_Daily():
-    return get_fred_daily('DJI')
+@router.get("/DJIA/Today")
+def get_DJIA_Daily():
+    return get_fred_daily('DJIA')
 
 
 @router.get('/SP500/Today')
@@ -103,35 +102,39 @@ def get_SP500_Daily():
     return get_fred_daily('SP500')
 
 
-@router.get('/DJI')
-def get_DJI(start: str = None,
-            end: str = None):
+@router.get('/DJIA')
+def get_DJIA(start: str = None,
+             end: str = None):
     fred = Fred(api_key)
 
     if end is None:
         end = date.today()
 
-    DJI = fred.get_series('DJIA', start, end)
+    DJIA = fred.get_series('DJIA', start, end)
 
-    df = DJI.to_frame(name='DJIA')
-    df.index = pd.to_datetime(df.index)
+    df = pd.DataFrame({'Date': DJIA.index, 'DJIA': DJIA.values})
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df.index, y=df['DJI'], mode='lines', name='DJI'))
+
+    # 데이터프레임에서 Trace 추가
+    fig.add_trace(go.Scatter(x=df['Date'], y=df['DJIA'], mode='lines', name='DJIA'))
+
+    # 레이아웃 업데이트
     fig.update_layout(
-        title="DJI Daily Data",
+        title="DJIA Daily Data",
         title_font_size=20,
         xaxis_title="Date",
-        yaxis_title="DJI",
+        yaxis_title="DJIA",
         legend_title="Legend Title",
         margin=dict(l=20, r=20, t=40, b=20),
-        font=dict(family="Courx`ier New, monospace", size=18, color="RebeccaPurple"),
+        font=dict(family="Courier New, monospace", size=18, color="RebeccaPurple"),
         paper_bgcolor="white",
     )
 
     chart = fig.to_image(format='png')
 
     return Response(content=chart, media_type='image/png')
+
 
 
 @router.get('/SP500')
@@ -144,22 +147,35 @@ def get_SP500(start: str = None,
 
     sp500 = fred.get_series('SP500', start, end)
 
-    df = sp500.to_frame(name='SP500')
-    df.index = pd.to_datetime(df.index)
+    df = pd.DataFrame({'Date': sp500.index, 'SP500': sp500.values})
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df.index, y=df['SP500'], mode='lines', name='SP500'))
+
+    # 데이터프레임에서 Trace 추가
+    fig.add_trace(go.Scatter(x=df['Date'], y=df['SP500'], mode='lines', name='SP5000'))
+
+    # 레이아웃 업데이트
     fig.update_layout(
         title="SP500 Daily Data",
         title_font_size=20,
         xaxis_title="Date",
-        yaxis_title="SP500",
+        yaxis_title="DJIA",
         legend_title="Legend Title",
         margin=dict(l=20, r=20, t=40, b=20),
-        font=dict(family="Courx`ier New, monospace", size=18, color="RebeccaPurple"),
+        font=dict(family="Courier New, monospace", size=18, color="RebeccaPurple"),
         paper_bgcolor="white",
     )
 
     chart = fig.to_image(format='png')
 
     return Response(content=chart, media_type='image/png')
+
+
+@router.get('/yfinance/sp500')
+def get_yf_sp500():
+
+    ticker = yf.Ticker('^GSPC')
+    ticker.history(start = '2023-01-01', end = '2023-12-31', interval = '1d')
+
+
+
