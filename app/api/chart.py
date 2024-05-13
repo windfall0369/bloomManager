@@ -52,7 +52,7 @@ show(block=False)
 matplotlib.use('Agg')
 
 router = APIRouter(
-    prefix="/chart",
+    prefix="/{name}/chart",
     tags=["chart"]
 
 )
@@ -89,7 +89,7 @@ def draw_mpf(ticker, start, end, interval, style,
     return chart
 
 
-@router.get("/mpf/{name}")
+@router.get("/mpf")
 def mpf_chart(name: str,
               start: str = '2024-01-01',
               end: str = '2024-12-31',
@@ -101,7 +101,7 @@ def mpf_chart(name: str,
     return Response(content=img, media_type='image/png')
 
 
-@router.get("/daily/{name}")
+@router.get("/daily")
 def get_daily_chart(name: str,
                     start: str = '2024-04-19',
                     end: str = '2024-04-20',
@@ -115,7 +115,7 @@ def get_daily_chart(name: str,
     return Response(content=dailyChartImg, media_type='image/png')
 
 
-@router.get("/day/{name}")
+@router.get("/day")
 def get_day_chart(name: str,
                   start: str = '2024-04-19',
                   end: str = '2024-04-26',
@@ -129,7 +129,7 @@ def get_day_chart(name: str,
     return Response(content=dayChartImg, media_type='image/png')
 
 
-@router.get("/week/{name}")
+@router.get("/week")
 def get_week_chart(name: str,
                    start: str = '2024-01-01',
                    end: str = '2024-12-31',
@@ -142,7 +142,7 @@ def get_week_chart(name: str,
     return Response(content=weekChartImg, media_type='image/png')
 
 
-@router.get("/month/{name}")
+@router.get("/month")
 def get_month_chart(name: str,
                     start: str = '2024-01-01',
                     end: str = '2024-12-31',

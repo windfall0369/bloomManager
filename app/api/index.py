@@ -77,29 +77,17 @@ def get_fng():
     return {"fng_score": fng}
 
 
-def get_fred_daily(ticker):
-    fred = Fred(api_key)
-    score = fred.get_series(ticker)
-    today = score.index[-1]
-    today = today.strftime('%Y-%m-%d')
-    score = score.iloc[-1]
+def get_index(symbol):
+    ticker = yf.Ticker(symbol)
+    today = datetime.date.today()
+    df = ticker.history(start='2024-01-01', end=today, interval='1d')
+    today_score = round(df['Close'].iloc[-1], 2)
 
-    return {today: score}
-
-
-@router.get('/NASDAQCOM/Today')
-def get_NASDAQCOM():
-    return get_fred_daily('NASDAQCOM')
+    return today + " : " + today_score
 
 
-@router.get("/DJIA/Today")
-def get_DJIA_Daily():
-    return get_fred_daily('DJIA')
-
-
-@router.get('/SP500/Today')
-def get_SP500_Daily():
-    return get_fred_daily('SP500')
+def get_index_chart(symbol):
+    ticker = yf.Ticker(symbol)
 
 
 @router.get('/DJIA')
@@ -136,8 +124,7 @@ def get_DJIA(start: str = None,
     return Response(content=chart, media_type='image/png')
 
 
-
-@router.get('/SP500')
+@router.get('/SP500/chart')
 def get_SP500(start: str = None,
               end: str = None):
     fred = Fred(api_key)
@@ -171,11 +158,21 @@ def get_SP500(start: str = None,
     return Response(content=chart, media_type='image/png')
 
 
-@router.get('/yfinance/sp500')
-def get_yf_sp500():
-
-    ticker = yf.Ticker('^GSPC')
-    ticker.history(start = '2023-01-01', end = '2023-12-31', interval = '1d')
+@router.get('/SP500')
+def get_sp500():
+    return get_index('^GSPC')
 
 
+@router.get('/NASDAQCOM')
+def get_NASDAQCOM():
+    return get_index('^IXIC')
 
+
+@router.get('/RUT')
+def get_RUT():
+    return get_index('^RUT')
+
+
+@router.get('/DJIA')
+def get_DJIA():
+    return get_index('^DJI')

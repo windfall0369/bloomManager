@@ -8,6 +8,7 @@ from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from starlette.responses import HTMLResponse
+from yahooquery import Ticker
 
 from api import chart
 from api import financial_info
@@ -15,6 +16,8 @@ from api import options
 from api import report
 from api import index
 from api import raw_material
+from api import currency
+from api import bond
 
 app = FastAPI()
 
@@ -24,13 +27,11 @@ app.include_router(options.router)
 app.include_router(report.router)
 app.include_router(index.router)
 app.include_router(raw_material.router)
+app.include_router(currency.router)
+app.include_router(bond.router)
+
 
 templates = Jinja2Templates(directory="templates")
-
-
-class Ticker(BaseModel):
-    ticker: str
-    market: str
 
 
 @app.get("/")
@@ -50,5 +51,4 @@ def get_price(request: Request, name: str,
 
     html_table = df.to_html()
     return HTMLResponse(content=html_table)
-
 

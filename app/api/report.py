@@ -30,3 +30,4 @@ def get_recommendations(request: Request, name: str):
     return templates.TemplateResponse('reco.html', {"request": request})
 
 
+
