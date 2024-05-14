@@ -1,7 +1,6 @@
 from datetime import datetime
 import datetime
 import statsmodels.api as sm
-import pandas_datareader.data as web
 
 
 import yfinance as yf

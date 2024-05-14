@@ -1,7 +1,9 @@
 import yfinance as yf
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
+from bokeh.embed import components
 from fastapi.responses import *
+from fastapi import Request
 from fastapi import FastAPI, File, UploadFile
 from fastapi.templating import Jinja2Templates
 from fastapi import APIRouter
@@ -9,12 +11,10 @@ import mplfinance as mpf
 import matplotlib
 
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, RangeTool
-from bokeh.plotting import figure, show
-from bokeh.sampledata.stocks import AAPL
+from bokeh.models import ColumnDataSource, RangeTool, HoverTool
+from bokeh.plotting import figure, show, output_file, save
 
 from matplotlib.pyplot import show
-import matplotlib.pyplot as plt
 import io
 
 # 커스텀 마켓 컬러 설정
@@ -57,8 +57,34 @@ router = APIRouter(
 
 )
 
-
 templates = Jinja2Templates(directory="templates")
+
+
+@router.get('/html')
+def get_html(request: Request):
+    return templates.TemplateResponse("test.html", {"request": request})
+
+
+# @router.get('/test')
+def test_chart():
+    ticker = yf.Ticker('AAPL')
+    df = ticker.history(start='2023-01-01', end='2023-12-31', interval='1d')
+
+    # df.reset_index(inplace=True)
+    # source = ColumnDataSource(df)
+    #
+    # p = figure(x_axis_type="datetime", title="AAPL Stock Price", width=800, height=400)
+    # p.xaxis.axis_label = "Date"
+    # p.yaxis.axis_label = "Price (USD)"
+    # p.line(x='Date', y='Close', line_width=2, source=source, legend_label='Close Price', color='navy')
+    # p.scatter(x='Date', y='Close', size=5, source=source, color='navy', alpha=0.5)
+    #
+    # hover = HoverTool()
+    # hover.tooltips = [('Date', '@Date{%F}'), ('Close', '@Close{0.2f}')]
+    # hover.formatters = {'@Date': 'datetime'}
+    # p.add_tools(hover)
+
+    return 0
 
 
 # mpf 활용
@@ -152,11 +178,3 @@ def get_month_chart(name: str,
 
     monthChartImg = draw_mpf(ticker, start=start, end=end, interval=interval, style=style)
     return Response(content=monthChartImg, media_type='image/png')
-
-
-
-
-
-
-
-

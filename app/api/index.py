@@ -83,45 +83,11 @@ def get_index(symbol):
     df = ticker.history(start='2024-01-01', end=today, interval='1d')
     today_score = round(df['Close'].iloc[-1], 2)
 
-    return today + " : " + today_score
+    return today_score
 
 
 def get_index_chart(symbol):
     ticker = yf.Ticker(symbol)
-
-
-@router.get('/DJIA')
-def get_DJIA(start: str = None,
-             end: str = None):
-    fred = Fred(api_key)
-
-    if end is None:
-        end = date.today()
-
-    DJIA = fred.get_series('DJIA', start, end)
-
-    df = pd.DataFrame({'Date': DJIA.index, 'DJIA': DJIA.values})
-
-    fig = go.Figure()
-
-    # 데이터프레임에서 Trace 추가
-    fig.add_trace(go.Scatter(x=df['Date'], y=df['DJIA'], mode='lines', name='DJIA'))
-
-    # 레이아웃 업데이트
-    fig.update_layout(
-        title="DJIA Daily Data",
-        title_font_size=20,
-        xaxis_title="Date",
-        yaxis_title="DJIA",
-        legend_title="Legend Title",
-        margin=dict(l=20, r=20, t=40, b=20),
-        font=dict(family="Courier New, monospace", size=18, color="RebeccaPurple"),
-        paper_bgcolor="white",
-    )
-
-    chart = fig.to_image(format='png')
-
-    return Response(content=chart, media_type='image/png')
 
 
 @router.get('/SP500/chart')
