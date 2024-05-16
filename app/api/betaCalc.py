@@ -2,9 +2,9 @@ from datetime import datetime
 import datetime
 import statsmodels.api as sm
 
-
 import yfinance as yf
 import pandas as pd
+import famafrench
 
 tickers = ['^KS11', '039490.KS']
 
@@ -27,4 +27,22 @@ reg = sm.OLS(ret[['039490.KS']], ret[['^KS11', 'intercept']]).fit()
 # coef : 베타값
 # t value는 절대값 2가 넘으면 의미가 있음
 # R-squared : 설명력
-print(reg.summary())
+print(type(reg.summary()))
+
+
+def get_beta(tickers, start, end):
+    all_data = {}
+    for ticker in tickers:
+        all_data[ticker] = yf.download(ticker,
+                                       start=start,
+                                       end=end)
+
+    prices = pd.DataFrame({tic:data['Close'] for tic, data in all_data.items()})
+    ret = prices.pct_change().dropna()
+    ret['intercept'] = 1
+    reg = sm.OLS(ret[[tickers[0]]], ret[[tickers[1], 'intercept']]).fit()
+
+    return reg.summary()
+
+
+link = 'https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_BE-ME_CSV.zip'

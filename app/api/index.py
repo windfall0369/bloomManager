@@ -139,6 +139,6 @@ def get_RUT():
     return get_index('^RUT')
 
 
-@router.get('/DJIA')
+@router.get('/DJI')
 def get_DJIA():
     return get_index('^DJI')
