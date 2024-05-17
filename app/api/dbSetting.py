@@ -7,6 +7,24 @@ import time
 from yahooquery import Ticker
 import numpy as np
 
+# 시가총액 문자열을 숫자로 변환하는 함수 정의
+def convert_market_cap_to_number(market_cap_str):
+    if pd.isnull(market_cap_str):
+        return np.nan
+    factor = 1
+    if market_cap_str.endswith('T'):
+        factor = 1e12
+    elif market_cap_str.endswith('B'):
+        factor = 1e9
+    elif market_cap_str.endswith('M'):
+        factor = 1e6
+    try:
+        numeric_part = float(market_cap_str[:-1])
+        return numeric_part * factor
+    except ValueError:  # 숫자 변환에 실패한 경우 NaN 반환
+        return np.nan
+
+
 # # DB 연결
 engine = create_engine('mysql+pymysql://root:12345678@127.0.0.1:3306/stock_db')
 con = pymysql.connect(user='root',
@@ -17,65 +35,80 @@ con = pymysql.connect(user='root',
 
 mycursor = con.cursor()
 
-ticker_list = pd.read_sql('''
-    select * from global_ticker
-    where date = (select max(date) from global_ticker)
-    and country = 'United States';
-''', con=engine)
+# netincome, capitalStock, CashFlowFromContinuingOperatingActivities, totlaRevenue
 
-query_fs = '''
-    insert into global_fs (ticker, date, account, value, freq)
-    values (%s, %s, %s, %s, %s) as new
+
+# 분기 재무제표
+global_fs = pd.read_sql("""
+select * from global_fs
+where freq = 'q'
+and account in ('NetIncome', 'CapitalStock', 'CashFlowFromContinuingOperatingActivities', 'TotalRevenue')
+""", con=engine)
+
+# 티커 리스트
+ticker_list = pd.read_sql("""
+select Symbol as ticker, `Market Cap`, date from global_ticker
+where date = (select max(date) from global_ticker);
+""", con=engine)
+
+# 시가총액 문자열을 숫자로 변환
+ticker_list['Market Cap'] = ticker_list['Market Cap'].apply(convert_market_cap_to_number)
+
+
+# TTM
+global_fs = global_fs.sort_values(['ticker', 'account', 'date'])
+global_fs['ttm'] = global_fs.groupby(['ticker', 'account'], as_index=False)['value'].rolling(
+    window=4, min_periods=4).sum()['value']
+
+# 자본금 평균
+global_fs['ttm'] = np.where(global_fs['account'] == 'CapitalStock', global_fs['ttm'] / 4,
+                            global_fs['ttm'])
+global_fs = global_fs.groupby(['account', 'ticker']).tail(1)
+
+
+global_fs_merge = global_fs[['account', 'ticker',
+                             'ttm']].merge(ticker_list[['ticker', 'Market Cap', 'date']],
+                                           on='ticker')
+# 형 변환
+global_fs_merge['Market Cap'] = pd.to_numeric(global_fs_merge['Market Cap'], errors='coerce')
+
+global_fs_merge['Market Cap'] = global_fs_merge['Market Cap']
+
+global_fs_merge['value'] = global_fs_merge['Market Cap']/global_fs_merge['ttm']
+global_fs_merge['value'] = global_fs_merge['value'].round(4)
+global_fs_merge['indicator'] = np.where(
+    global_fs_merge['account'] == 'TotalRevenue', 'PSR',
+    np.where(
+        global_fs_merge['account'] == 'CashFlowFromContinuingOperatingActivities','PCR',
+        np.where(global_fs_merge['account'] == 'CapitalStock','PBR',
+                 np.where(global_fs_merge['account'] == 'NetIncome', 'PER', None))))
+
+global_fs_merge.rename(columns={'value' : 'value'}, inplace=True)
+global_fs_merge = global_fs_merge[['ticker', 'date', 'indicator', 'value']]
+global_fs_merge = global_fs_merge.replace([np.inf, -np.inf, np.nan], None)
+
+# 값 확인
+aapl_values = global_fs_merge.query("ticker == 'AAPL'")
+print(aapl_values)
+
+query = """
+    insert into global_value (ticker, date, indicator, value)
+    values (%s,%s,%s,%s) as new
     on duplicate key update
-    value = new.value;
-'''
+    value=new.value
+"""
 
-error_list = []
+args_fs = global_fs_merge.values.tolist()
+mycursor.executemany(query, args_fs)
+con.commit()
 
-for i in tqdm(range(0, len(ticker_list))):
 
-    # 티커 선택
-    ticker = ticker_list['Symbol'][i]
+global_fs = pd.read_sql("""
+select * from global_fs
+where freq = 'q'
+and account in ('NetIncome', 'CapitalStock', 'CashFlowFromContinuingOperatingActivities', 'TotalRevenue', 'CommonStockDividendPaid', 'CommonStockPayments')
+""", con=engine)
 
-    # 오류 발생 시 이를 무시하고 다음 루프로 진행
-    try:
-        #  정보 다운로드
-        data = Ticker(ticker)
-
-        # 연간 재무제표
-        data_y = data.all_financial_data(frequency='a')
-        data_y.reset_index(inplace=True)
-        data_y = data_y.loc[:, ~data_y.columns.isin(['periodType', 'currencyCode'])]
-        data_y = data_y.melt(id_vars=['symbol', 'asOfDate'])
-        data_y = data_y.replace([np.nan], None)
-        data_y['freq'] = 'y'
-        data_y.columns = ['ticker', 'date', 'account', 'value', 'freq']
-
-        # 분기 재무제표
-        data_q = data.all_financial_data(frequency='q')
-        data_q.reset_index(inplace=True)
-        data_q = data_q.loc[:, ~data_q.columns.isin(['periodType', 'currencyCode'])]
-        data_q = data_q.melt(id_vars=['symbol', 'asOfDate'])
-        data_q = data_q.replace([np.nan], None)
-        data_q['freq'] = 'q'
-        data_q.columns = ['ticker', 'date', 'account', 'value', 'freq']
-
-        # 데이터 합치기
-        data_fs = pd.concat([data_y, data_q], axis=0)
-
-        # 재무제표 데이터를 DB에 저장
-        args = data_fs.values.tolist()
-        mycursor.executemany(query_fs, args)
-        con.commit()
-
-    except:
-
-        # 오류 발생시 error_list에 티커 저장하고 넘어가기
-        print(ticker)
-        error_list.append(ticker)
-
-    # 타임슬립 적용
-    time.sleep(2)
 
 # 연결 종료
 engine.dispose()
