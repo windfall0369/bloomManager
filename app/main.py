@@ -6,6 +6,7 @@ import json
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from starlette.responses import HTMLResponse
 from yahooquery import Ticker
@@ -20,6 +21,13 @@ from api import currency
 from api import bond
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(chart.router)
 app.include_router(financial_info.router)
