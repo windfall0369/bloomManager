@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 import json
 
 router = APIRouter(
-    prefix="/{name}/financial_info",
+    prefix="/financial_info",
     tags=["financial_info"]
 )
 
