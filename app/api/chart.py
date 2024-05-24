@@ -61,6 +61,7 @@ router = APIRouter(
 templates = Jinja2Templates(directory="templates")
 
 
+# 주가(종가, 이평선 [60, 120, 200]) + 거래량
 @router.get('/bk/{symbol}')
 # 차트(p), 거래량(q)
 # script와 div 리턴
@@ -242,8 +243,7 @@ def draw_stock_chart(symbol: str,
 
     script, div = components(column(p, q, select, select_volume))
 
-    return script, div
-
+    return {"script": script, "div": div}
 
 @router.get("/daily/{symbol}")
 def get_daily_chart(symbol: str,
@@ -286,3 +286,4 @@ def get_month_chart(symbol: str,
     script, div = draw_stock_chart(symbol, start, end, interval)
 
     return script, div
+
