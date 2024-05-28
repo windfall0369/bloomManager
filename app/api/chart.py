@@ -1,12 +1,17 @@
+import json
+import os
+
 import yfinance as yf
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
 from fastapi.responses import *
-from fastapi import Request
+from fastapi import Request, requests
 from fastapi import FastAPI, File, UploadFile
 from fastapi.templating import Jinja2Templates
 from fastapi import APIRouter
-import mplfinance as mpf
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+
 import matplotlib
 
 from bokeh.embed import components
@@ -14,39 +19,9 @@ from bokeh.layouts import column
 from bokeh.models import ColumnDataSource, HoverTool, CrosshairTool, Range1d, RangeTool, DatetimeTickFormatter, \
     DatetimeTicker, Span, NumeralTickFormatter
 from bokeh.plotting import figure, show
+from jinja2 import FileSystemLoader, Environment, select_autoescape
 
 from matplotlib.pyplot import show
-import io
-
-# 커스텀 마켓 컬러 설정
-chart_style = {
-    "base_mpl_style": "dark_background",
-    "marketcolors": {
-        "candle": {"up": "#3dc985", "down": "#ef4f60"},
-        "edge": {"up": "#3dc985", "down": "#ef4f60"},
-        "wick": {"up": "#3dc985", "down": "#ef4f60"},
-        "ohlc": {"up": "green", "down": "red"},
-        "volume": {"up": "#247252", "down": "#82333f"},
-        "vcedge": {"up": "green", "down": "red"},
-        "vcdopcod": False,
-        "alpha": 1,
-    },
-    "mavcolors": ("#ad7739", "#a63ab2", "#62b8ba"),
-    "facecolor": "#1b1f24",
-    "gridcolor": "#2c2e31",
-    "gridstyle": "--",
-    "y_on_right": True,
-    "rc": {
-        "axes.grid": True,
-        "axes.grid.axis": "y",
-        "axes.edgecolor": "#474d56",
-        "axes.titlecolor": "red",
-        "figure.facecolor": "#161a1e",
-        "figure.titlesize": "x-large",
-        "figure.titleweight": "semibold",
-    },
-    "base_mpf_style": "binance-dark",
-}
 
 # 차트 출력x, 백엔드 'Agg' 사용
 show(block=False)
@@ -58,17 +33,21 @@ router = APIRouter(
 
 )
 
-templates = Jinja2Templates(directory="templates")
+env = Environment(
+    loader=FileSystemLoader('templates'),  # 템플릿 파일이 있는 디렉토리를 지정합니다.
+    autoescape=select_autoescape(['html', 'xml'])
+)
 
 
 # 주가(종가, 이평선 [60, 120, 200]) + 거래량
-@router.get('/bk/{symbol}')
+@router.get('/bk/{symbol}', response_class=HTMLResponse)
 # 차트(p), 거래량(q)
 # script와 div 리턴
 def draw_stock_chart(symbol: str,
                      start_date: str,
                      end_date: str,
-                     interval: str):
+                     interval: str,
+                     request: Request):
     ticker = yf.Ticker(symbol)
     df = ticker.history(start=start_date, end=end_date, interval=interval,
                         auto_adjust=True)
@@ -92,7 +71,7 @@ def draw_stock_chart(symbol: str,
     })
 
     p = figure(x_axis_type="datetime", title=f"{symbol} Close 가격",
-               width=1200, height=300,
+               width=1200, height=400,
                x_axis_label='날짜', y_axis_label='Close 가격',
                background_fill_color="#051221",
                tools="pan,box_zoom,reset,save")
@@ -162,7 +141,7 @@ def draw_stock_chart(symbol: str,
 
     # RangeTool 생성
     select = figure(title="Drag the middle and edges of the selection box to change the range above",
-                    height=130, width=800, y_range=p.y_range,
+                    width=800, height=600,
                     x_axis_type="datetime", y_axis_type=None,
                     tools="", toolbar_location=None, background_fill_color="#efefef")
 
@@ -184,7 +163,7 @@ def draw_stock_chart(symbol: str,
 
     # figure 생성
     q = figure(x_axis_type='datetime', title="AAPL 거래량",
-               width=1200, height=250,
+               width=1200, height=400,
                x_axis_label='날짜', y_axis_label='거래량',
                background_fill_color="#0A1B33",
                tools="")
@@ -229,7 +208,8 @@ def draw_stock_chart(symbol: str,
     q.y_range = Range1d(df['Volume'].min(), df['Volume'].max())
 
     select_volume = figure(title="Drag the middle and edges of the selection box to change the range above",
-                           height=130, width=800, y_range=q.y_range,
+                           width=1200, height=400,
+                           y_range=q.y_range,
                            x_axis_type="datetime", y_axis_type=None,
                            tools="", toolbar_location=None, background_fill_color="#efefef")
 
@@ -241,9 +221,17 @@ def draw_stock_chart(symbol: str,
     select_volume.ygrid.grid_line_color = None
     select_volume.add_tools(range_tool_v)
 
-    script, div = components(column(p, q, select, select_volume))
+    # script, div = components(column(p, q, select, select_volume))
+    script, div = components(column(p,q))
+    ans = {'div': div, 'script': script}
 
-    return {"script": script, "div": div}
+    current_directory = os.getcwd()
+
+    template = env.get_template('Func_Test.html')
+    html_content = template.render(script=script, div=div)
+
+    return HTMLResponse(content=html_content, status_code=200)
+
 
 @router.get("/daily/{symbol}")
 def get_daily_chart(symbol: str,
@@ -286,4 +274,3 @@ def get_month_chart(symbol: str,
     script, div = draw_stock_chart(symbol, start, end, interval)
 
     return script, div
-

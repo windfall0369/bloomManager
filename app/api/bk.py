@@ -35,7 +35,6 @@ def draw_stock_chart(symbol, start_date, end_date, interval):
 
     p = figure(x_axis_type="datetime", title=f"{symbol} Close 가격",
                width=1200, height=300,
-               x_axis_label='날짜', y_axis_label='Close 가격',
                background_fill_color="#051221",
                tools="pan,box_zoom,reset,save")
 
@@ -127,7 +126,6 @@ def draw_stock_chart(symbol, start_date, end_date, interval):
     # figure 생성
     q = figure(x_axis_type='datetime', title="AAPL 거래량",
                width=1200, height=250,
-               x_axis_label='날짜', y_axis_label='거래량',
                background_fill_color="#0A1B33",
                tools="")
 
@@ -370,7 +368,7 @@ def draw_stock_chart(symbol, start_date, end_date, interval):
 # print(type(div))
 #
 
-script, div = draw_stock_chart('AAPL', '2023-01-01', '2023-12-31', '1d')
+script, div = draw_stock_chart('AAPL', '2020-01-01', '2023-12-31', '1d')
 
 
 
@@ -387,6 +385,7 @@ html = f"""
 <body>
     {div}
     {script}
+    
 </body>
 </html>
 """

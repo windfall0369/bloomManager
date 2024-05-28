@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Func_Test.html in templates </title>
+    <style>
+      html, body {
+          box-sizing: border-box;
+          display: flow-root;
+          height: 100%;
+          width: 100%;
+          margin: 0;
+          padding: 0;
+          color: #97CDC1;
+          background-color: #0D0D0D;
+      }
+      .Menu-parent {
+          background-color: black;
+          height: 5vh;
+          width: 100vw;
+          display: flex; /* 요소들을 플렉스 컨테이너로 설정 */
+          justify-content: center; /* 요소들을 가운데 정렬하고 사이 간격을 동일하게 설정 */
+          align-items: center; /* 세로 중앙 정렬 */
+
+    }
+        .Menu-child {
+            justify-content: center;
+            width: 10vw;
+            height: 50px;
+            text-align: center;
+
+
+            border: 1px solid black;
+        }
+        .click {
+          text-decoration: none;
+          text-align: center;
+          color: inherit;
+          display: inline-block;
+          padding: 5px;
+        }
+        header {
+            display: flex;
+            justify-content: left;
+            height: 2vh;
+            margin: 0;
+            border: 1px solid #0D0D0D;
+            padding: 0;
+        }
+        .header-child {
+            width: 10%;
+            height: 100%;
+            background-color: #3D3E3F;
+            margin: 0;
+            border: 1px solid black;
+        }
+
+
+    </style>
+    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-3.4.1.min.js"></script>
+    <script type="text/javascript">
+        Bokeh.set_log_level("info");
+    </script>
+
+<body>
+  <header>
+      <div class="header-child"> 설정 </div>
+      <div class="header-child"> 보기</div>
+  </header>
+      <div class='Menu-parent'>
+        <div class='Menu-child'><a href='/Stock' class='click'>Stock</a></div>
+        <div class='Menu-child'><a href='/Future_Option' class='click'>Future/<br>Options</a></div>
+        <div class='Menu-child'><a href='/Index' class='click'>Index</a></div>
+        <div class='Menu-child'><a href='/Bond' class='click'>Bond</a></div>
+        <div class='Menu-child'><a href='/Raw Material' class='click'>Raw Material</a></div>
+        <div class='Menu-child'><a href='/Analysis_Research' class='click'>Analysis/<br>Research</a></div>
+        <div class='Menu-child'><a href='/News' class='click'>News</a></div>
+        <div class='Menu-child'><a href='/FX' class='click'>FX</a></div>
+        <div class='Menu-child'><a href='/Crypto' class='click'>Crypto</a></div>
+        <div class='Menu-child'><a href='/Tool' class='click'>Tool</a></div>
+        <div class='Menu-child'><a href="/Calendar" class="click">Calendar</a></div>
+      </div>
+
+  <div class="chart"> {{div|safe}}</div>
+  <div class="order-price">
+    <h3>호가창</h3>
+
+  </div>
+
+
+</body>
+</html>

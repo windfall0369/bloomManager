@@ -19,6 +19,8 @@ from api import index
 from api import raw_material
 from api import currency
 from api import bond
+from api import stock
+from api import news
 
 app = FastAPI()
 
@@ -37,6 +39,8 @@ app.include_router(index.router)
 app.include_router(raw_material.router)
 app.include_router(currency.router)
 app.include_router(bond.router)
+app.include_router(stock.router)
+app.include_router(news.router)
 
 
 templates = Jinja2Templates(directory="templates")
